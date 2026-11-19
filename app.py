@@ -122,8 +122,10 @@ def load_and_prepare_data():
         transformed_df["age"], bins=bins, labels=labels, right=True
     ).astype(str)
 
-    sex_dummies = pd.get_dummies(transformed_df["sex"], prefix="sex", dtype=int)
-    embarked_dummies = pd.get_dummies(transformed_df["embarked"], prefix="embarked", dtype=int)
+    sex_dummies = pd.get_dummies(transformed_df["sex"], prefix="sex", drop_first=True, dtype=int)
+    embarked_dummies = pd.get_dummies(
+        transformed_df["embarked"], prefix="embarked", drop_first=True, dtype=int
+    )
 
     transformed_df = pd.concat([transformed_df, sex_dummies, embarked_dummies], axis=1)
     transformed_df["pclass_str"] = transformed_df["pclass"].astype(str)
@@ -377,7 +379,7 @@ with tab_explore:
             st.plotly_chart(fig_fare_box, use_container_width=True)
 
     st.markdown(
-        f"""
+        """
         <div class="finding-box">
             <strong>Finding:</strong> Across the dataset, higher survival rates are observed among female passengers and passengers in higher ticket classes compared with male and third-class passengers.
         </div>
@@ -426,14 +428,14 @@ with tab_preprocessing:
 
     st.markdown("#### 4. Dummy coding")
     st.caption(
-        "Binary indicator columns were created for categorical sex and embarked features without dummy-coding survived or normalizing dummy columns."
+        "Binary indicator columns were created for sex and embarked using drop_first=True (removing one redundant reference column per variable) without dummy-coding survived or normalizing dummy columns."
     )
     d_col1, d_col2 = st.columns(2)
     with d_col1:
         st.write("**Before (sex, embarked)**")
         st.dataframe(cleaned_df[["sex", "embarked"]].head(8), use_container_width=True, hide_index=True)
     with d_col2:
-        st.write("**After (dummy variables)**")
+        st.write("**After (dummy variables, drop_first=True)**")
         st.dataframe(transformed_df[meta["dummy_cols"]].head(8), use_container_width=True, hide_index=True)
 
 with tab_explorer:
@@ -467,7 +469,7 @@ with tab_explorer:
             "fare",
             "fare_norm",
             "embarked",
-        ]
+        ] + meta["dummy_cols"]
 
     active_indices = filtered_df.index
     view_filtered_df = base_view_df.loc[base_view_df.index.isin(active_indices)]
